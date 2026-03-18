@@ -7,16 +7,16 @@
 	</view>
 	<view>
 		<navigator url='/pages/login/login' open-type="navigate">
-			<button type="default">新页面 登录</button>
+			<button type="default">登录</button>
 		</navigator>
 		<navigator url='/pages/home/home' open-type="navigate">
-			<button type="default">新页面 主页</button>
+			<button type="default">主页</button>
 		</navigator>
 		<navigator url='/pages/my/my' open-type="navigate">
-			<button type="default">新页面 我的</button>
+			<button type="default">我的</button>
 		</navigator>
 		<navigator url='/pages/evaluate/evaluate' open-type="navigate">
-			<button type="default">新页面 评价</button>
+			<button type="default">评价</button>
 		</navigator>
 	</view>
 </template>
@@ -25,7 +25,7 @@
 	export default {
 		data() {
 			return {
-				title: 'Hello Uniapp'
+				title: '调试页面'
 			}
 		},
 		onLoad() {
