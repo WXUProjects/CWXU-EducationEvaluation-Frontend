@@ -32,18 +32,18 @@
             <!-- 三个统计数据 -->
             <view class="course-stats">
               <view class="stat-item">
-                <view class="stat-icon"><uni-icons type="person-filled" size="30"></uni-icons>‍</view>
+                <view class="stat-icon"><uni-icons type="person-filled" size="17"></uni-icons>‍</view>
                 <text class="stat-value">{{ course.teachers.length }}</text>
                 <text class="stat-label">位教师</text>
               </view>
               <view class="stat-item success">
-                <view class="stat-icon"><uni-icons type="checkbox" size="30"></uni-icons></view>
-                <text class="stat-value">{{ course.evaluatedCount }}</text>
+                <view class="stat-icon"><uni-icons type="checkbox" size="17"></uni-icons></view>
+                <text class="stat-value">{{ course.evaluated }}</text>
                 <text class="stat-label">已评价</text>
               </view>
               <view class="stat-item warning">
-                <view class="stat-icon"><uni-icons type="close" size="30"></uni-icons></view>
-                <text class="stat-value">{{ course.pendingCount }}</text>
+                <view class="stat-icon"><uni-icons type="close" size="17"></uni-icons></view>
+                <text class="stat-value">{{ course.pending }}</text>
                 <text class="stat-label">待评价</text>
               </view>
             </view>
@@ -51,7 +51,7 @@
           
           <!-- 展开箭头 -->
           <view class="toggle-icon" :class="{ 'rotate': course.isOpen }">
-            <uni-icons type="down" size="30"></uni-icons>
+            <uni-icons type="down" size="14"></uni-icons>
           </view>
         </view>
 
@@ -68,26 +68,27 @@
             </view>
             
             <view class="action-area">
-              <button 
-                class="eval-btn" 
-                :class="{ 'evaluated': teacher.isEvaluated }"
-                @click.stop="handleEvaluate(teacher, course)"
-                :disabled="teacher.isEvaluated"
-                hover-class="btn-hover"
-                :hover-stay-time="100"
-              >
-                <text v-if="teacher.isEvaluated" class="btn-text evaluated">
-                  <text class="icon-check">✓</text> 已评价
-                </text>
-                <text v-else class="btn-text normal">去评价</text>
-              </button>
+                <button 
+                  class="eval-btn" 
+                  :class="{ 'evaluated': teacher.isEvaluated }"
+                  @click.stop="handleEvaluate(teacher, course)"
+                  :disabled="teacher.isEvaluated"
+                  hover-class="btn-hover"
+                  :hover-stay-time="100"
+                >
+                  <view v-if="teacher.isEvaluated" class="btn-content evaluated">
+                    <text class="icon-check absolute-icon">✓</text>
+                    <text class="btn-label">已评价</text>
+                  </view>
+                  
+                  <text v-else class="btn-content normal">去评价</text>
+                </button>
             </view>
           </view>
         </view>
       </view>
     </view>
 
-    <!-- 空状态 -->
     <view v-if="!loading && courses.length === 0" class="empty-tip">
       <text>暂无可评价的课程</text>
     </view>
@@ -100,7 +101,7 @@ import { ref, onMounted, computed } from 'vue';
 const loading = ref(true);
 const courses = ref([]);
 
-// 模拟
+// 模拟, 真实后端使用类似fetchCoursesFromApi
 const mockFetchCourses = () => {
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -108,7 +109,6 @@ const mockFetchCourses = () => {
         {
           id: 101,
           name: "test1",
-          isOpen: false,
           teachers: [
             { id: 1001, name: "张三", isEvaluated: false },
             { id: 1002, name: "李四", isEvaluated: true },
@@ -119,8 +119,7 @@ const mockFetchCourses = () => {
         },
         {
           id: 102,
-          name: "tset2",
-          isOpen: false,
+          name: "test2",
           teachers: [
             { id: 2001, name: "周八", isEvaluated: false },
             { id: 2002, name: "吴九", isEvaluated: false }
@@ -129,7 +128,6 @@ const mockFetchCourses = () => {
         {
           id: 103,
           name: "test3",
-          isOpen: false,
           teachers: [
             { id: 3001, name: "郑十", isEvaluated: true }
           ]
@@ -152,6 +150,12 @@ const mockFetchCourses = () => {
 //   })
 // }
 
+const addIsOpen = (courses) => {
+	courses.forEach((course)=>{
+		course.isOpen = false
+	})
+}
+
 // 计算每个课程的统计信息（已评价/未评价数量）
 const computeCourseStats = (course) => {
   const total = course.teachers.length;
@@ -171,6 +175,7 @@ onMounted(async () => {
       ...course,
       ...computeCourseStats(course)
     }));
+	addIsOpen(courses.value)
   } catch (error) {
     console.error('加载课程失败:', error);
     uni.showToast({ title: '加载失败', icon: 'none' });
@@ -197,31 +202,8 @@ const handleEvaluate = (teacher, course) => {
 </script>
 
 <style lang="scss">
-	
-$uni-spacing-col-base: 12px;
-$uni-spacing-col-lg: 16px;
-$uni-spacing-col-sm: 8px;
-$uni-spacing-row-base: 12px;
-$uni-spacing-row-lg: 16px;
-$uni-spacing-row-sm: 8px;
-$uni-font-size-sm: 12px;
-$uni-font-size-base: 14px;
-$uni-font-size-lg: 16px;
-$uni-text-color: #333;
-$uni-text-color-grey: #999;
-$uni-text-color-inverse: #fff;
-$uni-bg-color: #fff;
-$uni-bg-color-grey: #f5f5f5;
-$uni-bg-color-hover: #eee;
-$uni-border-color: #eee;
-$uni-border-radius-sm: 4px;
-$uni-border-radius-lg: 12px;
-$uni-border-radius-circle: 50%;
-$uni-img-size-base: 40px;
-$uni-color-primary: #007aff;
-$uni-color-success: #1aad19;
-$uni-opacity-disabled: 0.6;
 
+/* 页面主容器 */
 .evaluation-page {
   padding: $uni-spacing-col-base;
   background-color: $uni-bg-color-grey;
@@ -238,7 +220,7 @@ $uni-opacity-disabled: 0.6;
       font-weight: bold;
       color: $uni-text-color;
       margin-bottom: $uni-spacing-col-sm;
-      display: block; /* text 默认 inline，换行需 block */
+      display: block;
     }
     
     .page-desc {
@@ -286,7 +268,7 @@ $uni-opacity-disabled: 0.6;
       }
 
       .course-title {
-        font-size: $uni-font-size-base;
+        font-size: $uni-font-size-lg;
         font-weight: bold;
         color: $uni-text-color;
         margin-bottom: $uni-spacing-col-base;
@@ -299,6 +281,7 @@ $uni-opacity-disabled: 0.6;
         display: flex;
         gap: $uni-spacing-row-lg;
         margin-top: $uni-spacing-col-sm;
+        flex-wrap: wrap; /* 小屏自动换行 */
       }
 
       .stat-item {
@@ -320,6 +303,7 @@ $uni-opacity-disabled: 0.6;
         display: flex;
         align-items: center;
         color: $uni-text-color-grey;
+        line-height: 1;
       }
 
       .stat-value {
@@ -338,6 +322,7 @@ $uni-opacity-disabled: 0.6;
         display: flex;
         align-items: center;
         transition: transform 0.2s;
+        padding-top: 2px; /* 微调垂直对齐 */
         
         &.rotate {
           transform: rotate(180deg);
@@ -345,7 +330,7 @@ $uni-opacity-disabled: 0.6;
       }
     }
 
-    /* 展开状态 */
+    /* 展开状态 - 添加底部分隔线 */
     &.expanded {
       .course-header {
         border-bottom: 1px solid $uni-border-color;
@@ -353,7 +338,7 @@ $uni-opacity-disabled: 0.6;
       }
     }
 
-    /* 老师列表 */
+    /* 老师列表容器 */
     .teacher-list-wrapper {
       overflow: hidden;
       transition: all 0.3s ease;
@@ -362,7 +347,7 @@ $uni-opacity-disabled: 0.6;
 
       &.show {
         padding: $uni-spacing-col-base $uni-spacing-row-lg;
-        max-height: 500px;
+        max-height: 800px;
       }
     }
 
@@ -387,7 +372,7 @@ $uni-opacity-disabled: 0.6;
           width: $uni-img-size-base;
           height: $uni-img-size-base;
           border-radius: $uni-border-radius-circle;
-          background: linear-gradient(135deg, #007aff, #00c6ff);
+          background: linear-gradient(135deg, #007aff, #00c6ff); /* 头像渐变色 */
           color: $uni-text-color-inverse;
           display: flex;
           align-items: center;
@@ -403,29 +388,38 @@ $uni-opacity-disabled: 0.6;
         }
       }
 
-      /* 评价按钮 */
+      /* 操作区域 */
       .action-area {
         flex-shrink: 0;
+        margin-left: $uni-spacing-row-base;
       }
 
-      .eval-btn {
-        padding: 6px 20px;
+	.eval-btn {
+        width: 72px;
+        height: 32px;
+        
+        /* 布局居中 */
+        justify-content: center;
+        align-items: center;
+        padding: 0;
+        
+        /* 基础样式 */
         border-radius: $uni-border-radius-lg;
         font-size: $uni-font-size-sm;
         font-weight: normal;
         display: flex;
-        align-items: center;
-        gap: 4px;
         border: none;
         line-height: 1;
+        flex-shrink: 0;
+        position: relative;
 
-        /* 未评价 - 主色按钮 */
+        /* 未评价  */
         &:not(.evaluated):not(:disabled) {
           background-color: $uni-color-primary;
           color: $uni-text-color-inverse;
         }
 
-		//已评价
+        /* 已评价 */
         &.evaluated,
         &:disabled {
           background-color: $uni-bg-color-hover;
@@ -434,21 +428,37 @@ $uni-opacity-disabled: 0.6;
           opacity: $uni-opacity-disabled;
         }
 
-        .btn-text {
+        .btn-content {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          height: 100%;
+          position: relative;
+          
+          /* 已评价状态 */
           &.evaluated {
-            display: flex;
-            align-items: center;
-            gap: 2px;
+            .absolute-icon {
+              position: absolute;
+              left: 8px;
+              font-weight: bold;
+              font-size: $uni-font-size-sm;
+            }
+            .btn-label {
+              margin-left: 0;
+            }
           }
-          .icon-check {
-            font-weight: bold;
-            font-size: $uni-font-size-sm;
-          }
+        }
+        
+        .icon-check {
+          font-weight: bold;
+          font-size: $uni-font-size-sm;
         }
       }
     }
   }
 
+  /* hover */
   .course-header-hover {
     background-color: $uni-bg-color-hover !important;
   }
