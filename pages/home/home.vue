@@ -138,17 +138,17 @@ const mockFetchCourses = () => {
 };
 
 // 调后端
-// const fetchCoursesFromApi = () => {
-//   return new Promise((resolve, reject) => {
-//     uni.request({
-//       url: '/api/courses/evaluation-list',
-//       method: 'GET',
-//       header: { token: uni.getStorageSync('token') },
-//       success: (res) => resolve(res.data),
-//       fail: (err) => reject(err)
-//     })
-//   })
-// }
+const fetchCoursesFromApi = () => {
+  return new Promise((resolve, reject) => {
+    uni.request({
+      url: '/api/courses/evaluation-list',
+      method: 'GET',
+      header: { token: uni.getStorageSync('token') },
+      success: (res) => resolve(res.data),
+      fail: (err) => reject(err)
+    })
+  })
+}
 
 const addIsOpen = (courses) => {
 	courses.forEach((course)=>{
@@ -372,7 +372,7 @@ const handleEvaluate = (teacher, course) => {
           width: $uni-img-size-base;
           height: $uni-img-size-base;
           border-radius: $uni-border-radius-circle;
-          background: linear-gradient(135deg, #007aff, #00c6ff); /* 头像渐变色 */
+          background: linear-gradient(135deg, $uni-color-primary, $uni-color-primary-d); /* 头像渐变色 */
           color: $uni-text-color-inverse;
           display: flex;
           align-items: center;
