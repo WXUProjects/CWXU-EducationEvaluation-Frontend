@@ -1,30 +1,45 @@
 <template>
-  <view class="my-page">
-    <!-- 个人信息头部 -->
-    <view class="profile-header">
-      <view class="avatar-container">
-        <view class="avatar-placeholder">{{ userInfo.name ? userInfo.name.charAt(0) : '?' }}</view>
-      </view>
-      <view class="user-info">
-        <text class="user-name">{{ userInfo.name || '未登录' }}</text>
-        <text class="user-student-id">{{ userInfo.studentId || '请登录' }}</text>
+  <view class="my-container">
+    <!-- 页面头部 -->
+    <view class="header">
+      <view class="user-info-wrapper">
+        <view class="avatar">{{ userInfo.name ? userInfo.name.charAt(0) : '?' }}</view>
+        <view class="info-text">
+          <text class="user-name">{{ userInfo.name || '未登录' }}</text>
+          <text class="user-student-id">{{ userInfo.studentId || '请登录' }}</text>
+        </view>
       </view>
     </view>
 
-    <!-- 信息列表 -->
-    <view class="info-section">
-      <uni-card :is-shadow="false" :is-full="true">
-        <uni-list>
-          <uni-list-item title="姓名" :rightText="userInfo.name || '未填写'"></uni-list-item>
-          <uni-list-item title="学号" :rightText="userInfo.studentId || '未填写'"></uni-list-item>
-          <uni-list-item title="班级" :rightText="userInfo.className || '未填写'"></uni-list-item>
-        </uni-list>
-      </uni-card>
-    </view>
+    <!-- 信息区域 -->
+    <view class="form-wrapper">
+      <view class="form-item">
+        <text class="title">个人信息</text>
+      </view>
 
-    <!-- 退出登录按钮 -->
-    <view class="logout-section">
+      <view class="info-item">
+        <text class="info-label">姓名</text>
+        <text class="info-value">{{ userInfo.name || '未填写' }}</text>
+      </view>
+
+      <view class="info-item">
+        <text class="info-label">学号</text>
+        <text class="info-value">{{ userInfo.studentId || '未填写' }}</text>
+      </view>
+
+      <view class="info-item">
+        <text class="info-label">班级</text>
+        <text class="info-value">{{ userInfo.className || '未填写' }}</text>
+      </view>
+
+
+      <!-- 退出登录按钮 -->
       <button class="logout-btn" @click="handleLogout">退出登录</button>
+    </view>
+
+    <!-- 页足 -->
+    <view class="footer">
+      <text class="copyright">无锡学院 新西伯利亚学院 教学评价系统</text>
     </view>
   </view>
 </template>
@@ -42,7 +57,7 @@ const mockFetchUserInfo = () => {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve({
-        name: '张三',
+        name: '李明',
         studentId: '2021001001',
         className: '计算机科学与技术1班'
       });
@@ -74,78 +89,147 @@ onMounted(async () => {
 </script>
 
 <style lang="scss">
-.my-page {
-  min-height: 100vh;
-  background-color: $uni-bg-color-grey;
+.my-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 94vh;
+  background: #6f2b75;
+}
 
-  .profile-header {
-    background: linear-gradient(135deg, $uni-color-primary, $uni-color-primary-d);
-    padding: $uni-spacing-col-lg * 2 $uni-spacing-col-base;
-    display: flex;
-    align-items: center;
-    gap: $uni-spacing-row-lg;
+.header {
+  padding: $uni-spacing-col-lg * 2;
+  display: flex;
+  align-items: center;
+}
 
-    .avatar-container {
-      .avatar-placeholder {
-        width: 80px;
-        height: 80px;
-        border-radius: $uni-border-radius-circle;
-        background-color: $uni-bg-color;
-        color: $uni-color-primary;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 32px;
-        font-weight: bold;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      }
-    }
+.user-info-wrapper {
+  display: flex;
+  align-items: center;
+  gap: $uni-spacing-row-lg;
+}
 
-    .user-info {
-      display: flex;
-      flex-direction: column;
-      gap: $uni-spacing-col-sm;
+.avatar {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: $uni-border-radius-circle;
+  background: $uni-bg-color;
+  color: #6f2b75;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+  font-weight: bold;
+}
 
-      .user-name {
-        font-size: $uni-font-size-lg;
-        font-weight: bold;
-        color: $uni-text-color-inverse;
-      }
+.info-text {
+  display: flex;
+  flex-direction: column;
+  gap: $uni-spacing-col-sm;
+}
 
-      .user-student-id {
-        font-size: $uni-font-size-base;
-        color: rgba(255, 255, 255, 0.9);
-      }
-    }
+.user-name {
+  font-size: $uni-font-size-lg + 4px;
+  font-weight: bold;
+  color: $uni-text-color-inverse;
+}
+
+.user-student-id {
+  font-size: $uni-font-size-base;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.form-wrapper {
+  flex: 1;
+  border-radius: 48rpx 48rpx 0 0;
+  background: $uni-bg-color;
+  padding: $uni-spacing-col-lg * 2;
+  box-shadow: 0 0 10rpx rgba(0, 0, 0, 0.1);
+}
+
+.title {
+  margin-left: 20rpx;
+  position: relative;
+  font-size: $uni-font-size-title;
+  font-weight: bold;
+  color: #6f2b75;
+}
+
+.title::after {
+  content: '';
+  position: absolute;
+  display: block;
+  top: 0;
+  left: -20rpx;
+  width: 10rpx;
+  height: 100%;
+  background: #6f2b75;
+}
+
+.form-item {
+  margin-bottom: $uni-spacing-col-lg;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $uni-spacing-col-base 0;
+  border-bottom: 1px solid $uni-border-color;
+}
+
+.info-label {
+  font-size: $uni-font-size-base;
+  color: $uni-text-color;
+}
+
+.info-value {
+  font-size: $uni-font-size-base;
+  color: $uni-text-color-grey;
+}
+
+.option-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $uni-spacing-col-base * 1.2 0;
+  border-bottom: 1px solid $uni-border-color;
+}
+
+.option-text {
+  font-size: $uni-font-size-base;
+  color: $uni-text-color;
+}
+
+.option-arrow {
+  font-size: 40rpx;
+  color: $uni-text-color-grey;
+  font-weight: 300;
+}
+
+.logout-btn {
+  width: 100%;
+  height: 88rpx;
+  background: $uni-bg-color;
+  color: $uni-color-error;
+  font-size: $uni-font-size-lg;
+  border-radius: $uni-border-radius-lg;
+  border: 1px solid $uni-color-error;
+  margin-top: $uni-spacing-col-lg * 2;
+
+  &:active {
+    opacity: 0.9;
   }
+}
 
-  .info-section {
-    margin-top: $uni-spacing-col-base;
+.footer {
+  background-color: $uni-bg-color;
+  padding: $uni-spacing-col-base 0 $uni-spacing-col-lg * 2 0;
+}
 
-    :deep(.uni-card__content) {
-      padding: 0;
-    }
-  }
-
-  .logout-section {
-    padding: $uni-spacing-col-lg * 2 $uni-spacing-col-base;
-
-    .logout-btn {
-      width: 100%;
-      height: 44px;
-      background-color: $uni-bg-color;
-      color: $uni-color-error;
-      border: 1px solid $uni-color-error;
-      border-radius: $uni-border-radius-lg;
-      font-size: $uni-font-size-base;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      &:active {
-        opacity: 0.8;
-      }
-    }
-  }
+.copyright {
+  text-align: center;
+  display: block;
+  font-size: $uni-font-size-sm;
+  color: $uni-text-color-grey;
 }
 </style>

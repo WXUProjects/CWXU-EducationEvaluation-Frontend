@@ -1,114 +1,133 @@
 <template>
-  <view class="evaluation-page">
+  <view class="home-container">
     <!-- 页面头部 -->
-    <view class="page-header">
-      <text class="page-title">课程评价中心</text><br>
+    <view class="header">
+      <!-- 🔹 新增：右上角"我的"入口 -->
+      <view class="user-entry" @click="goToMy" hover-class="user-entry-hover" :hover-stay-time="150">
+        <view class="avatar-small">
+          {{ userInfo?.nickname?.charAt(0) || '我' }}
+        </view>
+        <!-- 未登录时显示小圆点提示 -->
+        <view v-if="!isLoggedIn" class="login-tip"></view>
+      </view>
+      
+      <text class="page-title">课程评价中心</text>
       <text class="page-desc">请选择课程</text>
     </view>
 
-    <!-- 加载状态 -->
-    <view v-if="loading" class="loading-state">
-      <uni-load-more :contentText="{contentdown: '加载中...'}" :show="true"></uni-load-more>
-    </view>
+    <!-- 课程列表区域 -->
+    <view class="form-wrapper">
+      <!-- 加载状态 -->
+      <view v-if="loading" class="loading-state">
+        <uni-load-more :contentText="{contentdown: '加载中...'}" :show="true"></uni-load-more>
+      </view>
 
-    <!-- 课程列表 -->
-    <view v-else class="course-list">
-      <view 
-        v-for="course in courses" 
-        :key="course.id" 
-        class="course-card"
-        :class="{ 'expanded': course.isOpen }"
-      >
-        <!-- 课程头部 -->
+      <!-- 课程列表 -->
+      <view v-else class="course-list">
         <view 
-          class="course-header" 
-          @click="toggleCourse(course)"
-          hover-class="course-header-hover"
-          :hover-stay-time="150"
+          v-for="course in courses" 
+          :key="course.id" 
+          class="course-card"
+          :class="{ 'expanded': course.isOpen }"
         >
-          <view class="course-info">
-            <text class="course-title">{{ course.name }}</text>
-            
-            <!-- 三个统计数据 -->
-            <view class="course-stats">
-              <view class="stat-item">
-                <view class="stat-icon"><uni-icons type="person-filled" size="17"></uni-icons>‍</view>
-                <text class="stat-value">{{ course.teachers.length }}</text>
-                <text class="stat-label">位教师</text>
-              </view>
-              <view class="stat-item success">
-                <view class="stat-icon"><uni-icons type="checkbox" size="17"></uni-icons></view>
-                <text class="stat-value">{{ course.evaluated }}</text>
-                <text class="stat-label">已评价</text>
-              </view>
-              <view class="stat-item warning">
-                <view class="stat-icon"><uni-icons type="close" size="17"></uni-icons></view>
-                <text class="stat-value">{{ course.pending }}</text>
-                <text class="stat-label">待评价</text>
-              </view>
-            </view>
-          </view>
-          
-          <!-- 展开箭头 -->
-          <view class="toggle-icon" :class="{ 'rotate': course.isOpen }">
-            <uni-icons type="down" size="14"></uni-icons>
-          </view>
-        </view>
-
-        <!-- 老师列表 -->
-        <view class="teacher-list-wrapper" :class="{ 'show': course.isOpen }">
+          <!-- 课程头部 -->
           <view 
-            class="teacher-item" 
-            v-for="teacher in course.teachers" 
-            :key="teacher.id"
+            class="course-header" 
+            @click="toggleCourse(course)"
+            hover-class="course-header-hover"
+            :hover-stay-time="150"
           >
-            <view class="teacher-profile">
-              <view class="avatar-placeholder">{{ teacher.name.charAt(0) }}</view>
-              <text class="teacher-name">{{ teacher.name }}</text>
+            <view class="course-info">
+              <text class="course-title">{{ course.name }}</text>
+              
+              <!-- 三个统计数据 -->
+              <view class="course-stats">
+                <view class="stat-item">
+                  <view class="stat-icon"><uni-icons type="person-filled" size="17"></uni-icons></view>
+                  <text class="stat-value">{{ course.teachers.length }}</text>
+                  <text class="stat-label">位教师</text>
+                </view>
+                <view class="stat-item success">
+                  <view class="stat-icon"><uni-icons type="checkbox" size="17"></uni-icons></view>
+                  <text class="stat-value">{{ course.evaluated }}</text>
+                  <text class="stat-label">已评价</text>
+                </view>
+                <view class="stat-item warning">
+                  <view class="stat-icon"><uni-icons type="close" size="17"></uni-icons></view>
+                  <text class="stat-value">{{ course.pending }}</text>
+                  <text class="stat-label">待评价</text>
+                </view>
+              </view>
             </view>
             
-            <view class="action-area">
-                <button 
-                  class="eval-btn" 
-                  :class="{ 'evaluated': teacher.isEvaluated }"
-                  @click.stop="handleEvaluate(teacher, course)"
-                  :disabled="teacher.isEvaluated"
-                  hover-class="btn-hover"
-                  :hover-stay-time="100"
-                >
-                  <view v-if="teacher.isEvaluated" class="btn-content evaluated">
-                    <text class="icon-check absolute-icon">✓</text>
-                    <text class="btn-label">已评价</text>
-                  </view>
-                  
-                  <text v-else class="btn-content normal">去评价</text>
-                </button>
+            <!-- 展开箭头 -->
+            <view class="toggle-icon" :class="{ 'rotate': course.isOpen }">
+              <uni-icons type="down" size="14"></uni-icons>
+            </view>
+          </view>
+
+          <!-- 老师列表 -->
+          <view class="teacher-list-wrapper" :class="{ 'show': course.isOpen }">
+            <view 
+              class="teacher-item" 
+              v-for="teacher in course.teachers" 
+              :key="teacher.id"
+            >
+              <view class="teacher-profile">
+                <view class="avatar-placeholder">{{ teacher.name.charAt(0) }}</view>
+                <text class="teacher-name">{{ teacher.name }}</text>
+              </view>
+              
+              <view class="action-area">
+                  <button 
+                    class="eval-btn" 
+                    :class="{ 'evaluated': teacher.isEvaluated }"
+                    @click.stop="handleEvaluate(teacher, course)"
+                    :disabled="teacher.isEvaluated"
+                    hover-class="btn-hover"
+                    :hover-stay-time="100"
+                  >
+                    <view v-if="teacher.isEvaluated" class="btn-content evaluated">
+                      <text class="icon-check absolute-icon">✓</text>
+                      <text class="btn-label">已评价</text>
+                    </view>
+                    
+                    <text v-else class="btn-content normal">去评价</text>
+                  </button>
+              </view>
             </view>
           </view>
         </view>
       </view>
+
+      <view v-if="!loading && courses.length === 0" class="empty-tip">
+        <text>暂无可评价的课程</text>
+      </view>
     </view>
 
-    <view v-if="!loading && courses.length === 0" class="empty-tip">
-      <text>暂无可评价的课程</text>
+    <!-- 页足 -->
+    <view class="footer">
+      <text class="copyright">无锡学院 新西伯利亚学院 教学评价系统</text>
     </view>
   </view>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 
 const loading = ref(true);
 const courses = ref([]);
+const userInfo = ref(null);
+const isLoggedIn = ref(false);
 
-// 模拟, 真实后端使用类似fetchCoursesFromApi
+// 模拟获取课程数据
 const mockFetchCourses = () => {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve([
         {
           id: 101,
-          name: "test1",
+          name: "数据结构",
           teachers: [
             { id: 1001, name: "张三", isEvaluated: false },
             { id: 1002, name: "李四", isEvaluated: true },
@@ -119,7 +138,7 @@ const mockFetchCourses = () => {
         },
         {
           id: 102,
-          name: "test2",
+          name: "数字逻辑电路",
           teachers: [
             { id: 2001, name: "周八", isEvaluated: false },
             { id: 2002, name: "吴九", isEvaluated: false }
@@ -127,7 +146,7 @@ const mockFetchCourses = () => {
         },
         {
           id: 103,
-          name: "test3",
+          name: "大学物理",
           teachers: [
             { id: 3001, name: "郑十", isEvaluated: true }
           ]
@@ -137,26 +156,13 @@ const mockFetchCourses = () => {
   });
 };
 
-// 调后端
-const fetchCoursesFromApi = () => {
-  return new Promise((resolve, reject) => {
-    uni.request({
-      url: '/api/courses/evaluation-list',
-      method: 'GET',
-      header: { token: uni.getStorageSync('token') },
-      success: (res) => resolve(res.data),
-      fail: (err) => reject(err)
-    })
+const addIsOpen = (courses) => {
+  courses.forEach((course) => {
+    course.isOpen = false
   })
 }
 
-const addIsOpen = (courses) => {
-	courses.forEach((course)=>{
-		course.isOpen = false
-	})
-}
-
-// 计算每个课程的统计信息（已评价/未评价数量）
+// 计算每个课程的统计信息
 const computeCourseStats = (course) => {
   const total = course.teachers.length;
   const evaluated = course.teachers.filter(t => t.isEvaluated).length;
@@ -167,15 +173,44 @@ const computeCourseStats = (course) => {
   };
 };
 
+const checkLogin = () => {
+  const token = uni.getStorageSync('token');
+  const user = uni.getStorageSync('userInfo');
+  if (token && user) {
+    isLoggedIn.value = true;
+    userInfo.value = typeof user === 'string' ? JSON.parse(user) : user;
+  }
+};
+
+const goToMy = () => {
+  if (!isLoggedIn.value) {
+    uni.showToast({ title: '请先登录', icon: 'none' });
+    setTimeout(() => {
+      uni.navigateTo({ url: '/pages/login/login' });
+    }, 1200);
+    return;
+  }
+  uni.navigateTo({ url: '/pages/my/my' });
+};
+
+const fakeLogin = () => {
+  uni.setStorageSync('token', 'your_token_here');
+  uni.setStorageSync('userInfo', { nickname: '李明'});
+}
+
 // 页面加载
 onMounted(async () => {
+  fakeLogin();
+	
+  checkLogin(); // 🔹 先检查登录态
+  
   try {
     const data = await mockFetchCourses();
     courses.value = data.map(course => ({
       ...course,
       ...computeCourseStats(course)
     }));
-	addIsOpen(courses.value)
+    addIsOpen(courses.value)
   } catch (error) {
     console.error('加载课程失败:', error);
     uni.showToast({ title: '加载失败', icon: 'none' });
@@ -193,277 +228,326 @@ const toggleCourse = (course) => {
 const handleEvaluate = (teacher, course) => {
   if (teacher.isEvaluated) return;
   
-  //跳转评价页
-  uni.showModal({
-  	title: `评价 ${teacher.name} 老师`,
-  })
+  uni.navigateTo({
+    url: `/pages/evaluate/evaluate?teacherName=${encodeURIComponent(teacher.name)}&courseName=${encodeURIComponent(course.name)}`
+  });
 };
-
 </script>
 
 <style lang="scss">
+.home-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 94vh;
+  background: #6f2b75;
+}
 
-/* 页面主容器 */
-.evaluation-page {
-  padding: $uni-spacing-col-base;
-  background-color: $uni-bg-color-grey;
-  min-height: 100vh;
-  box-sizing: border-box;
+.header {
+  padding: 40rpx;
+  text-align: center;
+  position: relative; // 🔹 为绝对定位做准备
+}
 
-  /* 页面头部 */
-  .page-header {
-    text-align: center;
-    padding: $uni-spacing-col-lg $uni-spacing-col-base;
-    
-    .page-title {
-      font-size: $uni-font-size-lg;
-      font-weight: bold;
-      color: $uni-text-color;
-      margin-bottom: $uni-spacing-col-sm;
-      display: block;
-    }
-    
-    .page-desc {
-      font-size: $uni-font-size-sm;
-      color: $uni-text-color-grey;
-      display: block;
-    }
-  }
-
-  /* 加载/空状态 */
-  .loading-state,
-  .empty-tip {
-    text-align: center;
-    padding: $uni-spacing-col-lg;
-    color: $uni-text-color-grey;
-    font-size: $uni-font-size-base;
-  }
-
-  /* 课程列表 */
-  .course-list {
+/* 🔹 新增：右上角用户入口样式 */
+.user-entry {
+  position: absolute;
+  top: 28rpx;
+  right: 40rpx;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  .avatar-small {
+    width: 60rpx;
+    height: 60rpx;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
     display: flex;
-    flex-direction: column;
-    gap: $uni-spacing-col-base;
+    align-items: center;
+    justify-content: center;
+    font-size: 26rpx;
+    font-weight: 600;
+    border: 2rpx solid rgba(255, 255, 255, 0.4);
+    transition: all 0.2s;
+  }
+  
+  .login-tip {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 16rpx;
+    height: 16rpx;
+    background: #ff6b6b;
+    border-radius: 50%;
+    border: 2rpx solid #6f2b75;
+    animation: pulse 2s infinite;
+  }
+}
+
+.user-entry-hover .avatar-small {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.page-title {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #ffffff;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.page-desc {
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.9);
+  display: block;
+}
+
+.form-wrapper {
+  flex: 1;
+  border-radius: 48rpx 48rpx 0 0;
+  background: #ffffff;
+  padding: 40rpx;
+  box-shadow: 0 0 10rpx rgba(0, 0, 0, 0.1);
+}
+
+.loading-state,
+.empty-tip {
+  text-align: center;
+  padding: 80rpx 0;
+  color: #999999;
+  font-size: 28rpx;
+}
+
+.course-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.course-card {
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+
+  .course-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 24rpx 32rpx;
+    background-color: #ffffff;
+    position: relative;
+
+    .course-info {
+      flex: 1;
+      margin-right: 20rpx;
+    }
+
+    .course-title {
+      font-size: 32rpx;
+      font-weight: bold;
+      color: #333333;
+      margin-bottom: 16rpx;
+      line-height: 1.4;
+      display: block;
+    }
+
+    .course-stats {
+      display: flex;
+      gap: 32rpx;
+      margin-top: 8rpx;
+      flex-wrap: wrap;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 8rpx;
+      font-size: 24rpx;
+      color: #999999;
+
+      &.success {
+        .stat-value { color: #4cd964; }
+      }
+      &.warning {
+        .stat-value { color: #ff9900; }
+      }
+    }
+
+    .stat-icon {
+      display: flex;
+      align-items: center;
+      color: #999999;
+      line-height: 1;
+    }
+
+    .stat-value {
+      font-weight: bold;
+      color: #333333;
+      font-size: 28rpx;
+    }
+
+    .stat-label {
+      font-size: 24rpx;
+    }
+
+    .toggle-icon {
+      color: #999999;
+      display: flex;
+      align-items: center;
+      transition: transform 0.2s;
+      padding-top: 4rpx;
+      
+      &.rotate {
+        transform: rotate(180deg);
+      }
+    }
   }
 
-  /* 课程卡片 */
-  .course-card {
-    background-color: $uni-bg-color;
-    border-radius: $uni-border-radius-lg;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-
-    /* 课程头部 */
+  &.expanded {
     .course-header {
+      border-bottom: 1px solid #e0e0e0;
+      background-color: #f8f8f8;
+    }
+  }
+
+  .teacher-list-wrapper {
+    overflow: hidden;
+    transition: all 0.3s ease;
+    background-color: #f8f8f8;
+    max-height: 0;
+
+    &.show {
+      padding: 24rpx 32rpx;
+      max-height: 1000rpx;
+    }
+  }
+
+  .teacher-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20rpx 0;
+    border-bottom: 1px solid #e0e0e0;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .teacher-profile {
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      padding: $uni-spacing-col-base $uni-spacing-row-lg;
-      background-color: $uni-bg-color;
+      align-items: center;
+      gap: 20rpx;
+
+      .avatar-placeholder {
+        width: 52rpx;
+        height: 52rpx;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6f2b75, #8e3d95);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28rpx;
+        font-weight: bold;
+        flex-shrink: 0;
+      }
+
+      .teacher-name {
+        font-size: 28rpx;
+        color: #333333;
+      }
+    }
+
+    .action-area {
+      flex-shrink: 0;
+      margin-left: 20rpx;
+    }
+
+    .eval-btn {
+      width: 140rpx;
+      height: 64rpx;
+      
+      justify-content: center;
+      align-items: center;
+      padding: 0;
+      
+      border-radius: 12rpx;
+      font-size: 24rpx;
+      font-weight: normal;
+      display: flex;
+      border: none;
+      line-height: 1;
+      flex-shrink: 0;
       position: relative;
 
-      .course-info {
-        flex: 1;
-        margin-right: $uni-spacing-row-base;
+      &:not(.evaluated):not(:disabled) {
+        background-color: #6f2b75;
+        color: #ffffff;
       }
 
-      .course-title {
-        font-size: $uni-font-size-lg;
-        font-weight: bold;
-        color: $uni-text-color;
-        margin-bottom: $uni-spacing-col-base;
-        line-height: 1.4;
-        display: block;
+      &.evaluated,
+      &:disabled {
+        background-color: #f1f1f1;
+        color: #4cd964;
+        border: 1px solid #4cd964;
+        opacity: 0.7;
       }
 
-      /* 统计数据区域 */
-      .course-stats {
-        display: flex;
-        gap: $uni-spacing-row-lg;
-        margin-top: $uni-spacing-col-sm;
-        flex-wrap: wrap; /* 小屏自动换行 */
-      }
-
-      .stat-item {
+      .btn-content {
         display: flex;
         align-items: center;
-        gap: 4px;
-        font-size: $uni-font-size-sm;
-        color: $uni-text-color-grey;
-
-        &.success {
-          .stat-value { color: $uni-color-success; }
-        }
-        &.warning {
-          .stat-value { color: #ff9900; }
-        }
-      }
-
-      .stat-icon {
-        display: flex;
-        align-items: center;
-        color: $uni-text-color-grey;
-        line-height: 1;
-      }
-
-      .stat-value {
-        font-weight: bold;
-        color: $uni-text-color;
-        font-size: $uni-font-size-base;
-      }
-
-      .stat-label {
-        font-size: $uni-font-size-sm;
-      }
-
-      /* 展开箭头 */
-      .toggle-icon {
-        color: $uni-text-color-grey;
-        display: flex;
-        align-items: center;
-        transition: transform 0.2s;
-        padding-top: 2px; /* 微调垂直对齐 */
-        
-        &.rotate {
-          transform: rotate(180deg);
-        }
-      }
-    }
-
-    /* 展开状态 - 添加底部分隔线 */
-    &.expanded {
-      .course-header {
-        border-bottom: 1px solid $uni-border-color;
-        background-color: $uni-bg-color-grey;
-      }
-    }
-
-    /* 老师列表容器 */
-    .teacher-list-wrapper {
-      overflow: hidden;
-      transition: all 0.3s ease;
-      background-color: $uni-bg-color-grey;
-      max-height: 0;
-
-      &.show {
-        padding: $uni-spacing-col-base $uni-spacing-row-lg;
-        max-height: 800px;
-      }
-    }
-
-    /* 老师单项 */
-    .teacher-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: $uni-spacing-col-base 0;
-      border-bottom: 1px solid $uni-border-color;
-
-      &:last-child {
-        border-bottom: none;
-      }
-
-      .teacher-profile {
-        display: flex;
-        align-items: center;
-        gap: $uni-spacing-row-base;
-
-        .avatar-placeholder {
-          width: $uni-img-size-base;
-          height: $uni-img-size-base;
-          border-radius: $uni-border-radius-circle;
-          background: linear-gradient(135deg, $uni-color-primary, $uni-color-primary-d); /* 头像渐变色 */
-          color: $uni-text-color-inverse;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: $uni-font-size-base;
-          font-weight: bold;
-          flex-shrink: 0;
-        }
-
-        .teacher-name {
-          font-size: $uni-font-size-base;
-          color: $uni-text-color;
-        }
-      }
-
-      /* 操作区域 */
-      .action-area {
-        flex-shrink: 0;
-        margin-left: $uni-spacing-row-base;
-      }
-
-	.eval-btn {
-        width: 72px;
-        height: 32px;
-        
-        /* 布局居中 */
         justify-content: center;
-        align-items: center;
-        padding: 0;
-        
-        /* 基础样式 */
-        border-radius: $uni-border-radius-lg;
-        font-size: $uni-font-size-sm;
-        font-weight: normal;
-        display: flex;
-        border: none;
-        line-height: 1;
-        flex-shrink: 0;
+        width: 100%;
+        height: 100%;
         position: relative;
-
-        /* 未评价  */
-        &:not(.evaluated):not(:disabled) {
-          background-color: $uni-color-primary;
-          color: $uni-text-color-inverse;
-        }
-
-        /* 已评价 */
-        &.evaluated,
-        &:disabled {
-          background-color: $uni-bg-color-hover;
-          color: $uni-color-success;
-          border: 1px solid $uni-color-success;
-          opacity: $uni-opacity-disabled;
-        }
-
-        .btn-content {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 100%;
-          height: 100%;
-          position: relative;
-          
-          /* 已评价状态 */
-          &.evaluated {
-            .absolute-icon {
-              position: absolute;
-              left: 8px;
-              font-weight: bold;
-              font-size: $uni-font-size-sm;
-            }
-            .btn-label {
-              margin-left: 0;
-            }
+        
+        &.evaluated {
+          .absolute-icon {
+            position: absolute;
+            left: 16rpx;
+            font-weight: bold;
+            font-size: 24rpx;
+          }
+          .btn-label {
+            margin-left: 0;
           }
         }
-        
-        .icon-check {
-          font-weight: bold;
-          font-size: $uni-font-size-sm;
-        }
+      }
+      
+      .icon-check {
+        font-weight: bold;
+        font-size: 24rpx;
       }
     }
   }
+}
 
-  /* hover */
-  .course-header-hover {
-    background-color: $uni-bg-color-hover !important;
-  }
-  .btn-hover {
-    opacity: 0.9 !important;
-  }
+.course-header-hover {
+  background-color: #f8f8f8 !important;
+}
+
+.btn-hover {
+  opacity: 0.9 !important;
+}
+
+.footer {
+  background-color: #ffffff;
+  padding: 20rpx 0 40rpx 0;
+}
+
+.copyright {
+  text-align: center;
+  display: block;
+  font-size: 24rpx;
+  color: #999;
 }
 </style>
