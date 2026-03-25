@@ -2,7 +2,7 @@
   <view class="home-container">
     <!-- 页面头部 -->
     <view class="header">
-      <!-- 🔹 新增：右上角"我的"入口 -->
+      <!--右上角"我的"入口 -->
       <view class="user-entry" @click="goToMy" hover-class="user-entry-hover" :hover-stay-time="150">
         <view class="avatar-small">
           {{ userInfo?.nickname?.charAt(0) || '我' }}
@@ -202,7 +202,7 @@ const fakeLogin = () => {
 onMounted(async () => {
   fakeLogin();
 	
-  checkLogin(); // 🔹 先检查登录态
+  checkLogin(); // 先检查登录态
   
   try {
     const data = await mockFetchCourses();
