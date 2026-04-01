@@ -6,7 +6,7 @@
         <view class="avatar">{{ userInfo.name ? userInfo.name.charAt(0) : '?' }}</view>
         <view class="info-text">
           <text class="user-name">{{ userInfo.name || '未登录' }}</text>
-          <text class="user-student-id">{{ userInfo.studentId || '请登录' }}</text>
+          <text class="user-student-id">{{ userInfo.studentNo || '请登录' }}</text>
         </view>
       </view>
     </view>
@@ -24,13 +24,14 @@
 
       <view class="info-item">
         <text class="info-label">学号</text>
-        <text class="info-value">{{ userInfo.studentId || '未填写' }}</text>
+        <text class="info-value">{{ userInfo.studentNo || '未填写' }}</text>
       </view>
 
-      <view class="info-item">
+      <!-- API响应没有班级，我就注释了这段 -->
+      <!-- <view class="info-item">
         <text class="info-label">班级</text>
         <text class="info-value">{{ userInfo.className || '未填写' }}</text>
-      </view>
+      </view> -->
 
 
       <!-- 退出登录按钮 -->
@@ -49,21 +50,9 @@ import { ref, onMounted } from 'vue';
 
 const userInfo = ref({
   name: '',
-  studentId: '',
-  className: ''
+  studentNo: '',
+  idCardNo: ''
 });
-
-const mockFetchUserInfo = () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        name: '李明',
-        studentId: '2021001001',
-        className: '计算机科学与技术1班'
-      });
-    }, 500);
-  });
-};
 
 const handleLogout = () => {
   uni.showModal({
@@ -71,7 +60,11 @@ const handleLogout = () => {
     content: '确定要退出登录吗？',
     success: (res) => {
       if (res.confirm) {
+        // 清除登录信息
+        uni.removeStorageSync('userInfo');
+        uni.setStorageSync('islogin', false);
         uni.showToast({ title: '已退出登录', icon: 'none' });
+        uni.navigateTo({ url: '/pages/login/login' });
       }
     }
   });
@@ -79,8 +72,10 @@ const handleLogout = () => {
 
 onMounted(async () => {
   try {
-    const data = await mockFetchUserInfo();
+    const data = uni.getStorageSync('userInfo');
     userInfo.value = data;
+    console.log(data);
+
   } catch (error) {
     console.error('加载用户信息失败:', error);
     uni.showToast({ title: '加载失败', icon: 'none' });

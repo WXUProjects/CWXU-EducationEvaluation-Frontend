@@ -15,25 +15,15 @@
             <!-- 学号输入 -->
             <view class="form-item">
                 <text class="label">学号</text>
-                <input class="input" type="text" v-model="loginForm.username" placeholder="请输入学号"
-                    @input="validateUsername" />
+                <input class="input" type="text" v-model="loginForm.studentNo" placeholder="请输入学号" />
             </view>
 
-            <!-- 密码输入 -->
+            <!-- 身份证输入 -->
             <view class="form-item">
-                <text class="label">密码</text>
+                <text class="label">身份证</text>
                 <view class="password-input">
-                    <input class="input" type="password" v-model="loginForm.password" placeholder="请输入密码" />
+                    <input class="input" type="text" v-model="loginForm.idCardNo" placeholder="请输入身份证号" />
                 </view>
-            </view>
-
-            <!-- 记住密码 -->
-            <view class="options">
-                <label class="checkbox-label">
-                    <checkbox :checked="loginForm.remember" @change="handleRemember" />
-                    <text>记住密码</text>
-                </label>
-                <text class="forgot-link" @click="handleForgotPassword">忘记密码？</text>
             </view>
 
             <!-- 登录按钮 -->
@@ -54,64 +44,78 @@
     </view>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, reactive } from 'vue'
+import api from '../../utils/api'
 
 // 表单数据
 const loginForm = reactive({
-    username: '',
-    password: '',
+    studentNo: '',
+    idCardNo: '',
     remember: false
 })
 
 // 状态控制
 const loading = ref(false)
 
-// 验证账号
-const validateUsername = () => {
-    // 可添加账号格式验证逻辑
+// 验证学号
+// 规则：八位数
+const validateStudentNo = () => {
+    if (!loginForm.studentNo.trim()) {
+        uni.showToast({ title: '请输入学号', icon: 'none' })
+        return false;
+    }
+    if (loginForm.studentNo.length !== 8) {
+        uni.showToast({ title: '请输入正确的学号', icon: 'none' })
+        return false;
+    }
+    return true;
 }
 
-// 处理记住密码
-const handleRemember = (e) => {
-    loginForm.remember = e.detail.value
+// 验证身份证号
+const validateIdCardNo = () => {
+    if (!loginForm.idCardNo.trim()) {
+        uni.showToast({ title: '请输入身份证号', icon: 'none' })
+        return false;
+    }
+    if (!/^[1-9]\d{5}(18|19|20)?\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}[\dX]$/i.test(loginForm.idCardNo)) {
+        uni.showToast({ title: '请输入正确的身份证号', icon: 'none' })
+        return false;
+    }
+    return true;
 }
 
 // 登录处理
 const handleLogin = async () => {
-    // 基础验证
-    if (!loginForm.username.trim()) {
-        uni.showToast({ title: '请输入学号', icon: 'none' })
-        return
-    }
-    if (!loginForm.password) {
-        uni.showToast({ title: '请输入密码', icon: 'none' })
-        return
+    if (!validateStudentNo() || !validateIdCardNo()) {
+        return;
     }
 
     loading.value = true
 
     try {
-        // TODO: 调用登录接口
-        // const res = await loginApi(loginForm)
-        uni.showToast({ title: '登录成功', icon: 'success' })
-        // 跳转首页
-        // uni.switchTab({ url: '/pages/index/index' })
+        const res = await api.login(loginForm.studentNo, loginForm.idCardNo, 1)
+        if (res.message === '登录成功') {
+            const userinfo = {
+                studentNo: loginForm.studentNo,
+                idCardNo: loginForm.idCardNo,
+                name: res.data!.name
+            }
+            // 存储登录信息
+            uni.setStorageSync('isLogin', true)
+            uni.setStorageSync('userInfo', userinfo)
+            // 重定向
+            uni.redirectTo({
+                url: '/pages/home/home'
+            })
+        } else {
+            uni.showToast({ title: res.message, icon: 'none' })
+        }
     } catch (error) {
         uni.showToast({ title: '登录失败', icon: 'none' })
     } finally {
         loading.value = false
     }
-}
-
-// 忘记密码
-const handleForgotPassword = () => {
-    uni.showToast({ title: '请联系管理员重置密码', icon: 'none' })
-}
-
-// 注册
-const handleRegister = () => {
-    uni.navigateTo({ url: '/pages/register/register' })
 }
 </script>
 
