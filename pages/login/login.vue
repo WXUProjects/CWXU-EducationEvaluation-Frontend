@@ -17,7 +17,7 @@
                 <input class="input" type="text" v-model="loginForm.username" placeholder="请输入学号"/>
             </view>
 
-            <!-- 密码输入 -->
+            <!-- 身份证输入 -->
             <view class="form-item">
                 <text class="label">身份证号</text>
                 <view class="password-input">
@@ -25,22 +25,22 @@
                 </view>
             </view>
 			
-			<!-- 任务选择区域 - Picker下拉单选 -->
-			<view class="form-item" v-if="proccessing_tasks !== null">
-				<text class="label">选择任务</text>
-				<picker 
-				    mode="selector" 
-				    :range="taskOptions" 
-				    range-key="label"
-				    :value="selectedTaskIndex"
-				    @change="onTaskChange"
-				>
-				    <view class="picker-trigger">
-				        <text class="picker-text">{{ selectedTaskName }}</text>
-				        <text class="picker-arrow">▼</text>
-				    </view>
-				</picker>
-			</view>
+            <!-- 任务选择区域 - Picker下拉单选 -->
+            <view class="form-item" v-if="proccessing_tasks !== null">
+                <text class="label">选择任务</text>
+                <picker 
+                    mode="selector" 
+                    :range="taskOptions" 
+                    range-key="label"
+                    :value="selectedTaskIndex"
+                    @change="onTaskChange"
+                >
+                    <view class="picker-trigger">
+                        <text class="picker-text">{{ selectedTaskName }}</text>
+                        <text class="picker-arrow">▼</text>
+                    </view>
+                </picker>
+            </view>
 
             <!-- 登录按钮 -->
             <button class="login-btn" :loading="loading" @click="handleLogin">
@@ -63,110 +63,181 @@
 <script setup>
 import { ref, reactive, onMounted, watch, computed } from 'vue'
 
+// ========== 响应式数据 ==========
 const proccessing_tasks = ref(null)
 const selectedTaskIndex = ref(-1) 
 const taskOptions = ref([]) 
-
-const login = (stuNumber, cardNumber, taskId) => {
-	return uni.request({
-		url:`/api/v1/auth/student/login`,
-		method: "POST",
-		data:{
-			stu_no: stuNumber,
-			card_no: cardNumber,
-			taskId: taskId
-		}
-	})
-}
-
-const get_info = (stuNumber) => {
-	return uni.request({
-		url:`/api/v1/auth/student/info?stuNo=${stuNumber}`,
-		method: "GET"
-	})
-}
-
-const get_processing_tasks = () => {
-	return uni.request({
-		url:`/api/v1/task/list?status=1&page=1&pageSize=10`,
-		method: "GET"
-	})
-}
+const loading = ref(false)
 
 // 表单数据
 const loginForm = reactive({
     username: '',
     idCardNumber: '',
-	selectedTaskId: ''
+    selectedTaskId: ''
 })
 
-// 状态控制
-const loading = ref(false)
-
-const onTaskChange = (e) => {
-    selectedTaskIndex.value = e.detail.value
-    const selectedTask = taskOptions.value[selectedTaskIndex.value]
-	loginForm.selectedTaskId = selectedTask.value
+// ========== API 请求函数 ==========
+const login = (stuNumber, cardNumber, taskId) => {
+    return uni.request({
+        url: `/api/v1/auth/student/login`,
+        method: "POST",
+        data: {
+            stu_no: stuNumber,
+            card_no: cardNumber,
+            task_id: taskId  // ✅ 后端字段通常为 snake_case
+        }
+    })
 }
 
-// 登录处理
-const handleLogin = async () => {
-    // 基础验证
-    if (!loginForm.username.trim()) {
-        uni.showToast({ title: '请输入学号', icon: 'none' })
-        return
-    }
-    if (!loginForm.idCardNumber) {
-        uni.showToast({ title: '请输入身份证号', icon: 'none' })
-        return
-    }
-	if (!loginForm.selectedTaskId) {
-	    uni.showToast({ title: '请选择一个评教任务', icon: 'none' })
-	    return
-	}
-
-    loading.value = true
-
-    try {
-		localStorage.removeItem("taskId")
-		uni.removeStorageSync("userInfo")
-        // TODO: 调用登录接口
-        const res = await login(loginForm.username, loginForm.idCardNumber, loginForm.selectedTaskId)
-		if (res.statusCode == 200) {
-			localStorage.setItem("taskId", loginForm.selectedTaskId)
-			const userRes = await get_info(loginForm.username)
-			uni.setStorageSync("userInfo", userRes.data.data)
-			uni.showToast({ title: '登录成功', icon: 'success' })
-			uni.navigateTo({ url: '/pages/home/home' })
-		}
-    } catch (error) {
-        uni.showToast({ title: '登录失败', icon: 'none' })
-    } finally {
-        loading.value = false
-    }
+const get_info = (stuNumber) => {
+    return uni.request({
+        url: `/api/v1/auth/student/info?stuNo=${stuNumber}`,
+        method: "GET"
+    })
 }
 
+const get_processing_tasks = () => {
+    return uni.request({
+        url: `/api/v1/task/list?status=1&page=1&pageSize=10`,
+        method: "GET"
+    })
+}
+
+// ========== 计算属性：安全获取选中任务名称 ==========
 const selectedTaskName = computed(() => {
     const idx = selectedTaskIndex.value
-    // 严格校验索引和数组内容，防止 undefined 导致空白
     if (idx >= 0 && taskOptions.value[idx]) {
         return taskOptions.value[idx].label
     }
     return '请选择任务'
 })
 
+// ========== 事件处理 ==========
+const onTaskChange = (e) => {
+    selectedTaskIndex.value = Number(e.detail.value)  // ✅ 统一转数字，兼容多端
+    const selectedTask = taskOptions.value[selectedTaskIndex.value]
+    if (selectedTask) {
+        loginForm.selectedTaskId = selectedTask.value
+    }
+}
+
+// ========== 验证函数 ==========
+const validateStudentNo = () => {
+    if (!loginForm.username.trim()) {
+        uni.showToast({ title: '请输入学号', icon: 'none' })
+        return false
+    }
+    if (loginForm.username.length !== 8) {
+        uni.showToast({ title: '请输入正确的学号', icon: 'none' })
+        return false
+    }
+    return true
+}
+
+const validateIdCardNo = () => {
+    if (!loginForm.idCardNumber.trim()) {
+        uni.showToast({ title: '请输入身份证号', icon: 'none' })
+        return false
+    }
+    // ✅ 字段名统一为 idCardNumber
+    if (!/^[1-9]\d{5}(18|19|20)?\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}[\dX]$/i.test(loginForm.idCardNumber)) {
+        uni.showToast({ title: '请输入正确的身份证号', icon: 'none' })
+        return false
+    }
+    return true
+}
+
+// ========== 登录主逻辑 ==========
+const handleLogin = async () => {
+    // 1. 学号验证
+    if (!loginForm.username.trim()) {
+        uni.showToast({ title: '请输入学号', icon: 'none' })
+        return
+    }
+    
+    // 2. 身份证号验证
+    if (!loginForm.idCardNumber) {
+        uni.showToast({ title: '请输入身份证号', icon: 'none' })
+        return
+    }  // ✅ 补全闭合括号
+    
+    // 3. 身份证格式正则验证（字段名已修正）
+    if (!/^[1-9]\d{5}(18|19|20)?\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}[\dX]$/i.test(loginForm.idCardNumber)) {
+        uni.showToast({ title: '请输入正确的身份证号', icon: 'none' })
+        return
+    }
+    
+    // 4. 任务选择验证
+    if (!loginForm.selectedTaskId) {
+        uni.showToast({ title: '请选择一个评教任务', icon: 'none' })
+        return
+    }
+
+    loading.value = true
+
+    try {
+        // 清理旧缓存
+        uni.removeStorageSync("taskId")
+        uni.removeStorageSync("userInfo")
+        
+        // 调用登录接口
+        const res = await login(loginForm.username, loginForm.idCardNumber, loginForm.selectedTaskId)
+        
+        if (res.statusCode === 200) {
+            // 登录成功：存储关键信息
+            uni.setStorageSync("stuNo", loginForm.username)
+            uni.setStorageSync("taskId", loginForm.selectedTaskId)
+            
+            // 获取用户详情
+            const userRes = await get_info(loginForm.username)
+            if (userRes.statusCode === 200) {
+                uni.setStorageSync("userInfo", userRes.data?.data || {})
+            }
+            
+            uni.showToast({ title: '登录成功', icon: 'success' })
+            
+            // 延迟跳转，让用户看到成功提示
+            setTimeout(() => {
+                uni.navigateTo({ url: '/pages/home/home' })
+            }, 800)
+        } else {
+            // ✅ 安全访问后端错误消息
+            const errMsg = res.data?.message || res.errMsg || '登录失败'
+            uni.showToast({ title: errMsg, icon: 'none' })
+        }
+    } catch (error) {
+        console.error('登录异常:', error)
+        uni.showToast({ title: '网络错误，请稍后重试', icon: 'none' })
+    } finally {
+        loading.value = false
+    }
+}
+
+// ========== 生命周期：监听任务数据变化 ==========
 watch(proccessing_tasks, (newVal) => {
-	taskOptions.value = newVal.map(task => ({
-		label: `${task.name}${task.status === 1 ? '（进行中）' : ''}`,
-		value: task.id
-	}))
-	selectedTaskIndex.value = -1 // 重置选中
-}, { immediate: false })
+    if (newVal && Array.isArray(newVal)) {
+        taskOptions.value = newVal.map(task => ({
+            label: `${task.name}${task.status === 1 ? '（进行中）' : ''}`,
+            value: task.id
+        }))
+        selectedTaskIndex.value = -1  // 重置选中
+        loginForm.selectedTaskId = '' // 清空已选任务
+    } else {
+        taskOptions.value = []
+    }
+}, { immediate: true })  // ✅ 初始化时也执行一次
 
-
-onMounted(async ()=>{
-	const taskRes = await get_processing_tasks()
-	proccessing_tasks.value = taskRes.data.data.tasks
+// ========== 生命周期：页面加载时获取任务列表 ==========
+onMounted(async () => {
+    try {
+        const taskRes = await get_processing_tasks()
+        // ✅ 使用可选链 + 空值合并，防止接口返回结构变化导致报错
+        proccessing_tasks.value = taskRes.data?.data?.tasks || []
+    } catch (err) {
+        console.error('获取任务列表失败:', err)
+        proccessing_tasks.value = []
+        uni.showToast({ title: '任务加载失败，仍可登录', icon: 'none' })
+    }
 })
 </script>
 
@@ -248,25 +319,6 @@ onMounted(async ()=>{
     font-size: 32rpx;
 }
 
-.options {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 32rpx;
-}
-
-.checkbox-label {
-    display: flex;
-    align-items: center;
-    font-size: 26rpx;
-    color: #666666;
-}
-
-.forgot-link {
-    font-size: 26rpx;
-    color: #6f2b75;
-}
-
 .login-btn {
     width: 100%;
     height: 88rpx;
@@ -275,6 +327,10 @@ onMounted(async ()=>{
     font-size: 32rpx;
     border-radius: 12rpx;
     border: none;
+}
+
+.login-btn:active {
+    opacity: 0.9;
 }
 
 .icon {
@@ -311,6 +367,11 @@ onMounted(async ()=>{
     align-items: center;
     justify-content: space-between;
     color: #333;
+    border-radius: 4rpx;
+}
+
+.picker-trigger:active {
+    background: #f9f9f9;
 }
 
 .picker-text {
@@ -324,11 +385,10 @@ onMounted(async ()=>{
     font-size: 24rpx;
     color: #999;
     margin-left: 16rpx;
+    transition: transform 0.2s;
 }
 
-/* 未选择时的提示色 */
-.picker-text:empty::before,
-.picker-text[value=""] {
-    color: #999;
+.picker-trigger:active .picker-arrow {
+    transform: rotate(180deg);
 }
 </style>
