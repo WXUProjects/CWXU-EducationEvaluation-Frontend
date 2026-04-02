@@ -193,10 +193,10 @@ const toggleCourse = (course) => {
 
 // 处理评价操作
 const handleEvaluate = (teacher, course) => {
-  if (teacher.isEvaluated) return;
+  if (teacher.hasEvaluation) return;
   
   uni.navigateTo({
-    url: `/pages/evaluate/evaluate?teacherName=${encodeURIComponent(teacher.name)}&courseName=${encodeURIComponent(course.name)}`
+    url: `/pages/evaluate/evaluate?teacherName=${encodeURIComponent(teacher.name)}&teacherId=${teacher.id}&courseName=${encodeURIComponent(course.name)}&courseId=${course.id}`
   });
 };
 </script>

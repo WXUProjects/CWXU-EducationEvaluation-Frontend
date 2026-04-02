@@ -3,7 +3,7 @@
     <!-- 标题区域 -->
     <view class="header">
       <view class="teacher-info-wrapper">
-        <view class="avatar">{{ teacher.name ? teacher.name.charAt(0) : '?' }}</view>
+        <view class="avatar">{{ teacher.name ? teacher.name.charAt(1) : '?' }}</view>
         <view class="info-text">
           <text class="teacher-name">{{ teacher.name || '老师' }}</text>
           <text class="course-name">{{ course.name || '课程' }}</text>
@@ -213,8 +213,24 @@ const ideologyQuestions = ref([
   '老师关注学生的全面发展'
 ]);
 
-const teacher = ref({ name: '' });
-const course = ref({ name: '' });
+const evaluate = (stuNumber, taskId, teacherId, courseId, detailScore, score, comment) => {
+	return uni.request({
+		url:`/api/v1/task/submit_evaluation`,
+		method: "POST",
+		data:{
+			taskId,
+			courseId,
+			teacherId,
+			stuNo: stuNumber,
+			detailScore,
+			score,
+			comment
+		}
+	})
+}
+
+const teacher = ref({ name: '', id: null });
+const course = ref({ name: '', id: null});
 
 // 满意度选择（1-5）
 const evaluation = ref({
@@ -280,7 +296,7 @@ const canSubmit = computed(() => {
          checkSection(evaluation.value.ideology, finalScores.value.ideology, ideologyQuestions.value.length);
 });
 
-const handleSubmit = () => {
+const handleSubmit = async () => {
   if (!canSubmit.value) {
     uni.showToast({
       title: '请完成所有题目的评分',
@@ -301,25 +317,11 @@ const handleSubmit = () => {
   
   // 构造提交数据
   const submitData = {
-    teacherName: teacher.value.name,
-    courseName: course.value.name,
-    evaluation: {
-      attitude: evaluation.value.attitude.map((val, idx) => ({
-        question: attitudeQuestions.value[idx],
-        level: val,
-        score: finalScores.value.attitude[idx]
-      })),
-      effect: evaluation.value.effect.map((val, idx) => ({
-        question: effectQuestions.value[idx],
-        level: val,
-        score: finalScores.value.effect[idx]
-      })),
-      ideology: evaluation.value.ideology.map((val, idx) => ({
-        question: ideologyQuestions.value[idx],
-        level: val,
-        score: finalScores.value.ideology[idx]
-      }))
-    },
+	scores: [
+	  ...finalScores.value.attitude,
+	  ...finalScores.value.effect,
+	  ...finalScores.value.ideology
+	],
     suggestion: suggestion.value,
     totalScore: [
       ...finalScores.value.attitude,
@@ -328,18 +330,20 @@ const handleSubmit = () => {
     ].reduce((sum, s) => sum + s, 0)
   };
   
-  console.log('提交数据:', submitData);
+  const userData = uni.getStorageSync('userInfo')
+  const taskId = localStorage.getItem("taskId")
+  const res = await evaluate(userData.studentNo, taskId, teacher.value.id, course.value.id, `[${submitData.scores}]`, submitData.totalScore, submitData.suggestion)
   
   setTimeout(() => {
     uni.hideLoading();
     uni.showToast({
       title: '评价提交成功',
       icon: 'success',
-      duration: 2000
+      duration: 1000
     });
     
     setTimeout(() => {
-      uni.navigateBack();
+      uni.navigateTo({ url: '/pages/home/home' })
     }, 2000);
   }, 1000);
 };
@@ -355,6 +359,13 @@ onMounted(() => {
   if (options.courseName) {
     course.value.name = decodeURIComponent(options.courseName);
   }
+  if (options.teacherId) {
+    teacher.value.id = options.teacherId;
+  }
+  if (options.courseId) {
+    course.value.id = options.courseId;
+  }
+  
   
   // 初始化数组
   const initArray = (length) => new Array(length).fill(null);
