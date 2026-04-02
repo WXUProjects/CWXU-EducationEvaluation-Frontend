@@ -44,7 +44,7 @@
               <view class="course-stats">
                 <view class="stat-item">
                   <view class="stat-icon"><uni-icons type="person-filled" size="17"></uni-icons></view>
-                  <text class="stat-value">{{ course.teachers.length }}</text>
+                  <text class="stat-value">{{ course.teacher.length }}</text>
                   <text class="stat-label">位教师</text>
                 </view>
                 <view class="stat-item success">
@@ -70,24 +70,24 @@
           <view class="teacher-list-wrapper" :class="{ 'show': course.isOpen }">
             <view 
               class="teacher-item" 
-              v-for="teacher in course.teachers" 
+              v-for="teacher in course.teacher" 
               :key="teacher.id"
             >
               <view class="teacher-profile">
-                <view class="avatar-placeholder">{{ teacher.name.charAt(0) }}</view>
+                <view class="avatar-placeholder">{{ teacher.name.charAt(1) }}</view>
                 <text class="teacher-name">{{ teacher.name }}</text>
               </view>
               
               <view class="action-area">
                   <button 
                     class="eval-btn" 
-                    :class="{ 'evaluated': teacher.isEvaluated }"
+                    :class="{ 'evaluated': teacher.hasEvaluation }"
                     @click.stop="handleEvaluate(teacher, course)"
-                    :disabled="teacher.isEvaluated"
+                    :disabled="teacher.hasEvaluation"
                     hover-class="btn-hover"
                     :hover-stay-time="100"
                   >
-                    <view v-if="teacher.isEvaluated" class="btn-content evaluated">
+                    <view v-if="teacher.hasEvaluation" class="btn-content evaluated">
                       <text class="icon-check absolute-icon">✓</text>
                       <text class="btn-label">已评价</text>
                     </view>
@@ -120,41 +120,12 @@ const courses = ref([]);
 const userInfo = ref(null);
 const isLoggedIn = ref(false);
 
-// 模拟获取课程数据
-const mockFetchCourses = () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([
-        {
-          id: 101,
-          name: "数据结构",
-          teachers: [
-            { id: 1001, name: "张三", isEvaluated: false },
-            { id: 1002, name: "李四", isEvaluated: true },
-            { id: 1003, name: "王五", isEvaluated: false },
-            { id: 1004, name: "赵六", isEvaluated: true },
-            { id: 1005, name: "孙七", isEvaluated: false }
-          ]
-        },
-        {
-          id: 102,
-          name: "数字逻辑电路",
-          teachers: [
-            { id: 2001, name: "周八", isEvaluated: false },
-            { id: 2002, name: "吴九", isEvaluated: false }
-          ]
-        },
-        {
-          id: 103,
-          name: "大学物理",
-          teachers: [
-            { id: 3001, name: "郑十", isEvaluated: true }
-          ]
-        }
-      ]);
-    }, 600);
-  });
-};
+const get_stu_task_list = (stuNumber, taskId) => {
+	return uni.request({
+		url:`/api/v1/task/student_task_detail?stuNo=${stuNumber}&taskId=${taskId}`,
+		method: "GET",
+	})
+}
 
 const addIsOpen = (courses) => {
   courses.forEach((course) => {
@@ -164,8 +135,8 @@ const addIsOpen = (courses) => {
 
 // 计算每个课程的统计信息
 const computeCourseStats = (course) => {
-  const total = course.teachers.length;
-  const evaluated = course.teachers.filter(t => t.isEvaluated).length;
+  const total = course.teacher.length;
+  const evaluated = course.teacher.filter(t => t.hasEvaluation).length;
   return {
     total,
     evaluated,
@@ -174,9 +145,9 @@ const computeCourseStats = (course) => {
 };
 
 const checkLogin = () => {
-  const token = uni.getStorageSync('token');
-  const user = uni.getStorageSync('userInfo');
-  if (token && user) {
+  const taskId = localStorage.getItem("taskId")
+  const user = uni.getStorageSync("userInfo");
+  if (user && taskId) {
     isLoggedIn.value = true;
     userInfo.value = typeof user === 'string' ? JSON.parse(user) : user;
   }
@@ -193,20 +164,16 @@ const goToMy = () => {
   uni.navigateTo({ url: '/pages/my/my' });
 };
 
-const fakeLogin = () => {
-  uni.setStorageSync('token', 'your_token_here');
-  uni.setStorageSync('userInfo', { nickname: '李明'});
-}
-
 // 页面加载
-onMounted(async () => {
-  fakeLogin();
-	
-  checkLogin(); // 先检查登录态
+onMounted(async () => {	
+  checkLogin();
   
   try {
-    const data = await mockFetchCourses();
-    courses.value = data.map(course => ({
+	const taskId = localStorage.getItem("taskId")
+	const user = uni.getStorageSync("userInfo");
+    const data = await get_stu_task_list(user.studentNo, taskId);
+	const coursesData = data.data.course
+    courses.value = coursesData.map(course => ({
       ...course,
       ...computeCourseStats(course)
     }));

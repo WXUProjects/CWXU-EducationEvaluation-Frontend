@@ -5,11 +5,11 @@
 		      "^uni-(.*)": "@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue"
 		    }
 	  },
-	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages  
+	"pages": [//pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages  
 		{
-			"path": "pages/index/index",
+			"path": "pages/login/login",
 			"style": {
-				"navigationBarTitleText": "测试页面"
+				"navigationBarTitleText": "教学评价系统"
 			}
 		},
 		{
@@ -26,12 +26,6 @@
 		},
 		{
 			"path": "pages/my/my",
-			"style": {
-				"navigationBarTitleText": "教学评价系统"
-			}
-		},
-		{
-			"path": "pages/login/login",
 			"style": {
 				"navigationBarTitleText": "教学评价系统"
 			}

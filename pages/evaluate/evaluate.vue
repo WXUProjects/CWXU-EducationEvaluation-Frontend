@@ -150,7 +150,7 @@
 
       <!-- 意见建议 -->
       <view class="form-item">
-        <text class="label">意见建议（选填）</text>
+        <text class="label">请对本主讲做一个不少于20字的意见建议（必填）</text>
         <textarea 
           class="textarea-input" 
           v-model="suggestion" 
@@ -288,6 +288,14 @@ const handleSubmit = () => {
     });
     return;
   }
+  
+  if (suggestion.value.length < 20){
+	uni.showToast({
+		title: '请给予一个不少于20字的评价',
+		icon: 'none'
+	});
+	return;
+  } 
   
   uni.showLoading({ title: '提交中...' });
   

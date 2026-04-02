@@ -6,7 +6,7 @@
         <view class="avatar">{{ userInfo.name ? userInfo.name.charAt(0) : '?' }}</view>
         <view class="info-text">
           <text class="user-name">{{ userInfo.name || '未登录' }}</text>
-          <text class="user-student-id">{{ userInfo.studentId || '请登录' }}</text>
+          <text class="user-student-id">{{ userInfo.studentNo || '请登录' }}</text>
         </view>
       </view>
     </view>
@@ -24,12 +24,12 @@
 
       <view class="info-item">
         <text class="info-label">学号</text>
-        <text class="info-value">{{ userInfo.studentId || '未填写' }}</text>
+        <text class="info-value">{{ userInfo.studentNo || '未填写' }}</text>
       </view>
 
       <view class="info-item">
-        <text class="info-label">班级</text>
-        <text class="info-value">{{ userInfo.className || '未填写' }}</text>
+        <text class="info-label">性别</text>
+        <text class="info-value">{{ userInfo.sex || '未填写' }}</text>
       </view>
 
 
@@ -44,25 +44,19 @@
   </view>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue';
 
 const userInfo = ref({
+  id: null,
+  idCardNo: '',
   name: '',
-  studentId: '',
-  className: ''
+  sex:'',
+  studentNo:''
 });
 
-const mockFetchUserInfo = () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        name: '李明',
-        studentId: '2021001001',
-        className: '计算机科学与技术1班'
-      });
-    }, 500);
-  });
+const getUserInfo = () => {
+  return uni.getStorageSync("userInfo")
 };
 
 const handleLogout = () => {
@@ -71,15 +65,19 @@ const handleLogout = () => {
     content: '确定要退出登录吗？',
     success: (res) => {
       if (res.confirm) {
+		uni.removeStorageSync("userInfo")
         uni.showToast({ title: '已退出登录', icon: 'none' });
+		setTimeout(()=>{
+			uni.navigateTo({ url: '/pages/login/login' })
+		}, 500)
       }
     }
   });
 };
 
-onMounted(async () => {
+onMounted(() => {
   try {
-    const data = await mockFetchUserInfo();
+    const data = getUserInfo();
     userInfo.value = data;
   } catch (error) {
     console.error('加载用户信息失败:', error);
