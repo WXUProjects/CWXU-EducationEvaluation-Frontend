@@ -20,3 +20,19 @@ export function createApp() {
   }
 }
 // #endif
+
+
+uni.addInterceptor('request', {
+    invoke(args) {
+        const token = uni.getStorageSync('token');
+        if (token) {
+            args.header = {
+                ...args.header,
+                'Authorization': `Bearer ${token}`
+            };
+        }
+    },
+    fail(err) {
+        console.error('请求拦截失败', err);
+    }
+});

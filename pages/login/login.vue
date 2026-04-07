@@ -82,9 +82,9 @@ const login = (stuNumber, cardNumber, taskId) => {
         url: `/api/v1/auth/student/login`,
         method: "POST",
         data: {
-            stu_no: stuNumber,
-            card_no: cardNumber,
-            task_id: taskId  // ✅ 后端字段通常为 snake_case
+            stuNo: stuNumber,
+            cardNo: cardNumber,
+            taskId: taskId
         }
     })
 }
@@ -179,14 +179,17 @@ const handleLogin = async () => {
         // 清理旧缓存
         uni.removeStorageSync("taskId")
         uni.removeStorageSync("userInfo")
+		uni.removeStorageSync("token")
         
         // 调用登录接口
         const res = await login(loginForm.username, loginForm.idCardNumber, loginForm.selectedTaskId)
+		// console.log(res)
         
-        if (res.statusCode === 200) {
+        if (res.data.data) {
             // 登录成功：存储关键信息
             uni.setStorageSync("stuNo", loginForm.username)
             uni.setStorageSync("taskId", loginForm.selectedTaskId)
+			uni.setStorageSync("token", res.data.data.token)
             
             // 获取用户详情
             const userRes = await get_info(loginForm.username)
@@ -233,6 +236,7 @@ onMounted(async () => {
         const taskRes = await get_processing_tasks()
         // ✅ 使用可选链 + 空值合并，防止接口返回结构变化导致报错
         proccessing_tasks.value = taskRes.data?.data?.tasks || []
+		uni.removeStorageSync("token")
     } catch (err) {
         console.error('获取任务列表失败:', err)
         proccessing_tasks.value = []
