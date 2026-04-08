@@ -17,135 +17,52 @@
         <text class="title">教学评价</text>
       </view>
 
-      <!-- 助学态度板块 -->
-      <view class="section-wrapper">
-        <view class="section-title">
-          <text class="section-label">第一部分</text>
-          <text class="section-name">助学态度</text>
-        </view>
-        
-        <view v-for="(question, qIndex) in attitudeQuestions" :key="`attitude-${qIndex}`" class="question-block">
+      <!-- 加载状态 -->
+      <uni-load-more v-if="loading" status="loading" />
+
+      <!-- 题目列表 -->
+      <view v-else-if="questions.length > 0">
+        <view v-for="(question, qIndex) in questions" :key="question.id" class="question-block">
           <view class="question-text">
             <text class="question-num">{{ qIndex + 1 }}.</text>
-            <text>{{ question }}</text>
+            <text>{{ question.content }}</text>
           </view>
-          
+
           <!-- 选项区域 -->
           <view class="options-group">
-            <view 
-              v-for="(option, oIndex) in options" 
+            <view
+              v-for="(option, oIndex) in options"
               :key="`opt-${qIndex}-${oIndex}`"
               class="option-item"
-              :class="{ 'selected': evaluation.attitude[qIndex] === option.value }"
-              @click="selectOption('attitude', qIndex, option.value)"
+              :class="{ 'selected': evaluations[qIndex] === option.value }"
+              @click="selectOption(qIndex, option.value)"
             >
               <text>{{ option.text }}</text>
             </view>
           </view>
-          
+
           <!-- 分数选择区域（选中选项后显示） -->
-          <view v-if="evaluation.attitude[qIndex]" class="score-picker">
+          <view v-if="evaluations[qIndex]" class="score-picker">
             <text class="score-label">最终评分：</text>
             <view class="score-numbers">
-              <view 
-                v-for="num in getScoreRange(evaluation.attitude[qIndex])" 
+              <view
+                v-for="num in getScoreRange(evaluations[qIndex])"
                 :key="num"
                 class="score-number"
-                :class="{ 'active': finalScores.attitude[qIndex] === num }"
-                @click="selectScore('attitude', qIndex, num)"
+                :class="{ 'active': finalScores[qIndex] === num }"
+                @click="selectScore(qIndex, num)"
               >
                 {{ num }}
               </view>
             </view>
-            <text class="score-tip">请选择 {{ getScoreRange(evaluation.attitude[qIndex])[0] }}-{{ getScoreRange(evaluation.attitude[qIndex])[getScoreRange(evaluation.attitude[qIndex]).length - 1] }} 分</text>
+            <text class="score-tip">请选择 {{ getScoreRange(evaluations[qIndex])[0] }}-{{ getScoreRange(evaluations[qIndex])[getScoreRange(evaluations[qIndex]).length - 1] }} 分</text>
           </view>
         </view>
       </view>
 
-      <!-- 助学效果板块 -->
-      <view class="section-wrapper">
-        <view class="section-title">
-          <text class="section-label">第二部分</text>
-          <text class="section-name">助学效果</text>
-        </view>
-        
-        <view v-for="(question, qIndex) in effectQuestions" :key="`effect-${qIndex}`" class="question-block">
-          <view class="question-text">
-            <text class="question-num">{{ attitudeQuestions.length + qIndex + 1 }}.</text>
-            <text>{{ question }}</text>
-          </view>
-          
-          <view class="options-group">
-            <view 
-              v-for="(option, oIndex) in options" 
-              :key="`opt-effect-${qIndex}-${oIndex}`"
-              class="option-item"
-              :class="{ 'selected': evaluation.effect[qIndex] === option.value }"
-              @click="selectOption('effect', qIndex, option.value)"
-            >
-              <text>{{ option.text }}</text>
-            </view>
-          </view>
-          
-          <view v-if="evaluation.effect[qIndex]" class="score-picker">
-            <text class="score-label">最终评分：</text>
-            <view class="score-numbers">
-              <view 
-                v-for="num in getScoreRange(evaluation.effect[qIndex])" 
-                :key="num"
-                class="score-number"
-                :class="{ 'active': finalScores.effect[qIndex] === num }"
-                @click="selectScore('effect', qIndex, num)"
-              >
-                {{ num }}
-              </view>
-            </view>
-            <text class="score-tip">请选择 {{ getScoreRange(evaluation.effect[qIndex])[0] }}-{{ getScoreRange(evaluation.effect[qIndex])[getScoreRange(evaluation.effect[qIndex]).length - 1] }} 分</text>
-          </view>
-        </view>
-      </view>
-
-      <!-- 思政行为板块 -->
-      <view class="section-wrapper">
-        <view class="section-title">
-          <text class="section-label">第三部分</text>
-          <text class="section-name">思政行为</text>
-        </view>
-        
-        <view v-for="(question, qIndex) in ideologyQuestions" :key="`ideology-${qIndex}`" class="question-block">
-          <view class="question-text">
-            <text class="question-num">{{ attitudeQuestions.length + effectQuestions.length + qIndex + 1 }}.</text>
-            <text>{{ question }}</text>
-          </view>
-          
-          <view class="options-group">
-            <view 
-              v-for="(option, oIndex) in options" 
-              :key="`opt-ideology-${qIndex}-${oIndex}`"
-              class="option-item"
-              :class="{ 'selected': evaluation.ideology[qIndex] === option.value }"
-              @click="selectOption('ideology', qIndex, option.value)"
-            >
-              <text>{{ option.text }}</text>
-            </view>
-          </view>
-          
-          <view v-if="evaluation.ideology[qIndex]" class="score-picker">
-            <text class="score-label">最终评分：</text>
-            <view class="score-numbers">
-              <view 
-                v-for="num in getScoreRange(evaluation.ideology[qIndex])" 
-                :key="num"
-                class="score-number"
-                :class="{ 'active': finalScores.ideology[qIndex] === num }"
-                @click="selectScore('ideology', qIndex, num)"
-              >
-                {{ num }}
-              </view>
-            </view>
-            <text class="score-tip">请选择 {{ getScoreRange(evaluation.ideology[qIndex])[0] }}-{{ getScoreRange(evaluation.ideology[qIndex])[getScoreRange(evaluation.ideology[qIndex]).length - 1] }} 分</text>
-          </view>
-        </view>
+      <!-- 空状态 -->
+      <view v-else class="empty-state">
+        <text class="empty-text">暂无评价题目</text>
       </view>
 
       <!-- 意见建议 -->
@@ -192,26 +109,14 @@ const scoreOptions = ref([
   { level: 5, scoreRange: { max: 10, min: 9 } },
 ])
 
-const attitudeQuestions = ref([
-  '老师备课认真，讲解清晰',
-  '老师对学生提问耐心解答',
-  '老师准时上下课，不迟到早退',
-  '老师认真批改作业，反馈及时'
-]);
+const getQuestions = () => {
+  return uni.request({ url: '/api/v1/question/list', method: 'GET' });
+};
 
-const effectQuestions = ref([
-  '通过这门课程，我收获很大',
-  '老师的教学方法有助于我理解知识',
-  '课程内容安排合理，循序渐进',
-  '老师能激发我的学习兴趣'
-]);
-
-const ideologyQuestions = ref([
-  '老师在教学中注重德育教育',
-  '老师以身作则，为人师表',
-  '老师引导学生树立正确的价值观',
-  '老师关注学生的全面发展'
-]);
+const questions = ref([]);
+const loading = ref(true);
+const evaluations = ref([]);
+const finalScores = ref([]);
 
 const evaluate = (stuNumber, taskId, teacherId, courseId, detailScore, score, comment) => {
 	return uni.request({
@@ -231,20 +136,6 @@ const evaluate = (stuNumber, taskId, teacherId, courseId, detailScore, score, co
 
 const teacher = ref({ name: '', id: null });
 const course = ref({ name: '', id: null});
-
-// 满意度选择（1-5）
-const evaluation = ref({
-  attitude: [],
-  effect: [],
-  ideology: []
-});
-
-// 最终评分存储（整数分数）
-const finalScores = ref({
-  attitude: [],
-  effect: [],
-  ideology: []
-});
 
 const suggestion = ref('');
 
@@ -267,33 +158,25 @@ const getScoreRange = (level) => {
 /**
  * 选择满意度选项
  */
-const selectOption = (section, index, value) => {
-  evaluation.value[section][index] = value;
-  // 切换选项时清空该题的最终评分，避免分数与等级不匹配
-  finalScores.value[section][index] = null;
+const selectOption = (index, value) => {
+  evaluations.value.splice(index, 1, value);
+  finalScores.value.splice(index, 1, null);
 };
 
 /**
  * 选择最终分数
  */
-const selectScore = (section, index, score) => {
-  finalScores.value[section][index] = score;
+const selectScore = (index, score) => {
+  finalScores.value.splice(index, 1, score);
 };
 
 /**
  * 校验是否可提交：所有问题都完成满意度选择+最终评分
  */
 const canSubmit = computed(() => {
-  const checkSection = (answers, scores, length) => {
-    return answers.length === length && 
-           scores.length === length &&
-           answers.every(v => v !== null && v !== undefined) &&
-           scores.every(v => v !== null && v !== undefined);
-  };
-  
-  return checkSection(evaluation.value.attitude, finalScores.value.attitude, attitudeQuestions.value.length) &&
-         checkSection(evaluation.value.effect, finalScores.value.effect, effectQuestions.value.length) &&
-         checkSection(evaluation.value.ideology, finalScores.value.ideology, ideologyQuestions.value.length);
+  const len = questions.value.length;
+  if (len === 0) return false;
+  return evaluations.value.every(v => v != null) && finalScores.value.every(v => v != null);
 });
 
 const handleSubmit = async () => {
@@ -316,18 +199,11 @@ const handleSubmit = async () => {
   uni.showLoading({ title: '提交中...' });
   
   // 构造提交数据
+  const scores = [...finalScores.value];
   const submitData = {
-	scores: [
-	  ...finalScores.value.attitude,
-	  ...finalScores.value.effect,
-	  ...finalScores.value.ideology
-	],
+	scores,
     suggestion: suggestion.value,
-    totalScore: [
-      ...finalScores.value.attitude,
-      ...finalScores.value.effect,
-      ...finalScores.value.ideology
-    ].reduce((sum, s) => sum + s, 0)
+    totalScore: scores.reduce((sum, s) => sum + s, 0)
   };
   
   const userData = uni.getStorageSync('userInfo')
@@ -348,11 +224,11 @@ const handleSubmit = async () => {
   }, 1000);
 };
 
-onMounted(() => {
+onMounted(async () => {
   const pages = getCurrentPages();
   const currentPage = pages[pages.length - 1];
   const options = currentPage.options;
-  
+
   if (options.teacherName) {
     teacher.value.name = decodeURIComponent(options.teacherName);
   }
@@ -365,17 +241,17 @@ onMounted(() => {
   if (options.courseId) {
     course.value.id = options.courseId;
   }
-  
-  
-  // 初始化数组
-  const initArray = (length) => new Array(length).fill(null);
-  evaluation.value.attitude = initArray(attitudeQuestions.value.length);
-  evaluation.value.effect = initArray(effectQuestions.value.length);
-  evaluation.value.ideology = initArray(ideologyQuestions.value.length);
-  
-  finalScores.value.attitude = initArray(attitudeQuestions.value.length);
-  finalScores.value.effect = initArray(effectQuestions.value.length);
-  finalScores.value.ideology = initArray(ideologyQuestions.value.length);
+
+  try {
+    const res = await getQuestions();
+    questions.value = (res.data?.data || []).sort((a, b) => a.sort - b.sort);
+    evaluations.value = new Array(questions.value.length).fill(null);
+    finalScores.value = new Array(questions.value.length).fill(null);
+  } catch (e) {
+    uni.showToast({ title: '题目加载失败', icon: 'none' });
+  } finally {
+    loading.value = false;
+  }
 });
 </script>
 
@@ -468,37 +344,15 @@ onMounted(() => {
   display: block;
 }
 
-.section-wrapper {
-  margin-bottom: $uni-spacing-col-lg * 2;
-  padding-bottom: $uni-spacing-col-lg;
-  border-bottom: 1px solid $uni-border-color;
-
-  &:last-of-type {
-    border-bottom: none;
-    margin-bottom: $uni-spacing-col-lg;
-    padding-bottom: 0;
-  }
-}
-
-.section-title {
-  margin-bottom: $uni-spacing-col-base;
+.empty-state {
   display: flex;
-  align-items: center;
-  gap: $uni-spacing-row-base;
+  justify-content: center;
+  padding: $uni-spacing-col-lg * 2 0;
 }
 
-.section-label {
-  font-size: $uni-font-size-sm;
-  color: $uni-color-primary;
-  background: rgba($uni-color-primary, 0.1);
-  padding: $uni-spacing-col-sm $uni-spacing-row-base;
-  border-radius: $uni-border-radius-base;
-}
-
-.section-name {
-  font-size: $uni-font-size-lg;
-  font-weight: bold;
-  color: $uni-text-color;
+.empty-text {
+  font-size: $uni-font-size-base;
+  color: $uni-text-color-grey;
 }
 
 .question-block {

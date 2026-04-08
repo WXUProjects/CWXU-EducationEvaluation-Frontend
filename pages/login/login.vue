@@ -62,6 +62,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, watch, computed } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 
 // ========== 响应式数据 ==========
 const proccessing_tasks = ref(null)
@@ -230,18 +231,25 @@ watch(proccessing_tasks, (newVal) => {
     }
 }, { immediate: true })  // ✅ 初始化时也执行一次
 
-// ========== 生命周期：页面加载时获取任务列表 ==========
-onMounted(async () => {
+// ========== 生命周期：获取任务列表 ==========
+const fetchTasks = async () => {
     try {
         const taskRes = await get_processing_tasks()
-        // ✅ 使用可选链 + 空值合并，防止接口返回结构变化导致报错
         proccessing_tasks.value = taskRes.data?.data?.tasks || []
-		uni.removeStorageSync("token")
     } catch (err) {
         console.error('获取任务列表失败:', err)
         proccessing_tasks.value = []
         uni.showToast({ title: '任务加载失败，仍可登录', icon: 'none' })
     }
+}
+
+onMounted(async () => {
+    uni.removeStorageSync("token")
+    await fetchTasks()
+})
+
+onShow(async () => {
+    await fetchTasks()
 })
 </script>
 
